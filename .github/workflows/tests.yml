@@ -34,4 +34,4 @@ jobs:
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: pytest src/core -v || true
+        run: pytest src/core -v
