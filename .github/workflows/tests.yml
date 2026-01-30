@@ -24,15 +24,14 @@ jobs:
 
       - name: Build Rust core
         working-directory: rust
+        run: cargo build --release
+
+      - name: Expose Rust library
         run: |
-          cargo build --release
-
-      - - name: Expose Rust library
-      - run: echo "LD_LIBRARY_PATH=${{ github.workspace }}/rust/target/release" >> $GITHUB_ENV
-
+          echo "LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/rust/target/"\
+          "release" >> $GITHUB_ENV
 
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: |
-          pytest src/core -v
+        run: pytest src/core -v
