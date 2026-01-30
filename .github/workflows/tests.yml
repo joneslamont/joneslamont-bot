@@ -31,7 +31,9 @@ jobs:
         run: |
           echo "LD_LIBRARY_PATH=$(pwd)/rust/target/release" >> $GITHUB_ENV
 
-      - name: Run tests
-        run: |
-          pytest src/core -v
+      - - name: Run tests
+      - env:
+      - PYTHONPATH: ${{ github.workspace }}
+      - run: |
+      - pytest src/core -v
 
