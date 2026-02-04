@@ -3,9 +3,15 @@ from src.core.rust_bridge import RustCore
 from src.execution.backtest import BacktestExecution
 from src.execution.paper import PaperExecution
 from src.execution.live import LiveExecution
+from src.core.intent_validator import validate_intent
+from src.core.intent import OrderIntent
+
 
 class Engine:
-    def __init__(self):
+    def __init__(self, strategy=None) -> None:
+        # Strategy (optional, import-safe)
+        self.strategy = strategy
+
         # Rust firewall
         self.rust = RustCore()
         print("RustCore version:", self.rust.version())
@@ -27,26 +33,27 @@ class Engine:
         else:
             raise RuntimeError(f"Unknown execution mode: {self.execution_mode}")
 
-def submit_order(self, qty: float, price: float, max_risk: float) -> None:
-    # ---------- HARD RUST FIREWALL ----------
-    rc = self.rust.validate_order(qty, price, max_risk)
-    if rc != 0:
-        raise ValueError(
-            f"Rust validate_order failed rc={rc}, "
-            f"last_error={self.rust.last_error()}"
-        )
+    def step(self, market_data):
+        """
+        Strategy evaluation step.
+        Returns intent ONLY. No execution.
+        """
+        if self.strategy is None:
+            return None
 
-    position_size = qty * price
+        intent = self.strategy.on_tick(market_data)
+        return intent
 
-    rc = self.rust.risk_check(position_size, max_risk)
-    if rc != 0:
-        raise ValueError(
-            f"Rust risk_check failed rc={rc}, "
-            f"last_error={self.rust.last_error()}"
-        )
+def submit_intent(self, intent: OrderIntent) -> OrderIntent:
+    """
+    Accepts strategy intent.
+    Validates invariants.
+    NO execution.
+    """
+    validate_intent(intent, allow_live=False)
+    return intent
 
-    # ---------- FIREWALL PASSED ----------
-    self.executor.execute(qty, price)
+
 
 
 
